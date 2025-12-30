@@ -1,5 +1,5 @@
 Type: Package
-Package: reclanc
+Package: reclancbalgene
 Title: A Revival of the ClaNC Algorithm
 Version: 0.0.0.9000
 Authors@R:
