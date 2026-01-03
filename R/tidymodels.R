@@ -1,6 +1,6 @@
 make_discrim_linear_clanc <- function() {
   parsnip::set_model_engine("discrim_linear", "classification", eng = "clanc")
-  parsnip::set_dependency("discrim_linear", eng = "clanc", pkg = "reclanc")
+  parsnip::set_dependency("discrim_linear", eng = "clanc", pkg = "reclancbalgene") ###
   parsnip::set_fit(
     model = "discrim_linear",
     eng = "clanc",
@@ -8,7 +8,7 @@ make_discrim_linear_clanc <- function() {
     value = list(
       interface = "formula",
       protect = c("formula", "data"),
-      func = c(pkg = "reclanc", fun = "clanc"),
+      func = c(pkg = "reclancbalgene", fun = "clanc"), ###
       defaults = list()
     )
   )
