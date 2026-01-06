@@ -90,9 +90,13 @@ select_genes <- function(abs_stats, ranks, ties, class_data, sign_stats) {
   # class_data is where `active` lives
   class_data_half <- class_data 
   class_data_half$active <- as.integer(floor(class_data$active/2))
-  df <- merge(df, class_data_half, by = "class") |>
-    selection_recurse()
+  df_pos <- merge(df, class_data_half, by = "class") |>
+    selection_recurse(sign_int=1)
 
+  df_neg <- merge(df, class_data_half, by = "class") |>
+    selection_recurse(sign_int=-1)
+
+  df <- rbind(df_pos,df_neg)
   df <- df[df$gets, ]
 
   data.frame(
@@ -104,17 +108,17 @@ select_genes <- function(abs_stats, ranks, ties, class_data, sign_stats) {
 
 
 #' @importFrom rlang .data
-selection_recurse <- function(df) {
+selection_recurse <- function(df,sign_int = 1) {
   if (all(df$reserved) || all(df$n_win >= df$active)) {
     return(NULL)
   }
 
-  df_pos <- df |>
+  df <- df |>
     dplyr::filter(!.data$reserved, .data$n_win < .data$active) |>
     dplyr::arrange(.data$gene, .data$rank, dplyr::desc(.data$abs)) |>
     dplyr::mutate(
       n = seq_len(dplyr::n()),
-      win = .data$n == 1,
+      win = (.data$n == 1)&(.data$sign == sign_int), # win only when the sign matches
       .by = "gene"
     ) |>
     dplyr::arrange(.data$class, .data$rank) |>
@@ -125,8 +129,6 @@ selection_recurse <- function(df) {
     ) |>
     dplyr::mutate(reserved = any(.data$gets), .by = "gene") |>
     dplyr::mutate(n_win = max(.data$n_win), .by = "class")
-
-
   
   rbind(df, selection_recurse(df))
 }
