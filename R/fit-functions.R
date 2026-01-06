@@ -88,7 +88,9 @@ select_genes <- function(abs_stats, ranks, ties, class_data, sign_stats) {
   )
 
   # class_data is where `active` lives
-  df <- merge(df, class_data, by = "class") |>
+  class_data_half <- class_data 
+  class_data_half$active <- as.integer(floor(class_data$active/2))
+  df <- merge(df, class_data_half, by = "class") |>
     selection_recurse()
 
   df <- df[df$gets, ]
@@ -107,7 +109,7 @@ selection_recurse <- function(df) {
     return(NULL)
   }
 
-  df <- df |>
+  df_pos <- df |>
     dplyr::filter(!.data$reserved, .data$n_win < .data$active) |>
     dplyr::arrange(.data$gene, .data$rank, dplyr::desc(.data$abs)) |>
     dplyr::mutate(
@@ -123,6 +125,9 @@ selection_recurse <- function(df) {
     ) |>
     dplyr::mutate(reserved = any(.data$gets), .by = "gene") |>
     dplyr::mutate(n_win = max(.data$n_win), .by = "class")
+
+
+  
   rbind(df, selection_recurse(df))
 }
 
