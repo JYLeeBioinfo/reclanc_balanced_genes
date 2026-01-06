@@ -9,26 +9,28 @@ clanc_fit <- function(expression, class_data, classes) {
   )
 
   abs_stats <- abs(class_stats)
-  up_only   <- ifelse(class_stats > 0,  abs(class_stats), -Inf)
-  down_only <- ifelse(class_stats < 0,  abs(class_stats), -Inf)
+  sign_stats <- sign(class_stats)
+  # up_only   <- ifelse(class_stats > 0,  abs(class_stats), -Inf)
+  # down_only <- ifelse(class_stats < 0,  abs(class_stats), -Inf)
 
-  class_data_half <- class_data
-  class_data_half$active <- as.integer(floor(class_data$active / 2))
+  # class_data_half <- class_data
+  # class_data_half$active <- as.integer(floor(class_data$active / 2))
 
-  ranks_up <- t(apply(up_only,   1, \(x) rank(-x, ties.method = "min")))
-  ties_up  <- t(apply(ranks_up,  1, duplicated))
+  # ranks_up <- t(apply(up_only,   1, \(x) rank(-x, ties.method = "min")))
+  # ties_up  <- t(apply(ranks_up,  1, duplicated))
   
-  ranks_dw <- t(apply(down_only, 1, \(x) rank(-x, ties.method = "min")))
-  ties_dw  <- t(apply(ranks_dw,  1, duplicated))
+  # ranks_dw <- t(apply(down_only, 1, \(x) rank(-x, ties.method = "min")))
+  # ties_dw  <- t(apply(ranks_dw,  1, duplicated))
   
-  selected_up <- select_genes(up_only,   ranks_up, ties_up, class_data_half)
-  selected_dw <- select_genes(down_only, ranks_dw, ties_dw, class_data_half)
+  # selected_up <- select_genes(up_only,   ranks_up, ties_up, class_data_half)
+  # selected_dw <- select_genes(down_only, ranks_dw, ties_dw, class_data_half)
   
-  selected <- rbind(selected_up, selected_dw)
+  # selected <- rbind(selected_up, selected_dw)
+  
+  ranks <- t(apply(abs_stats, 1, \(x) rank(-x, ties.method = "min")))
+  ties <- t(apply(ranks, 1, duplicated))
+  selected <- select_genes(abs_stats, ranks, ties, class_data,sign_stats)
 
-  #ranks <- t(apply(abs_stats, 1, \(x) rank(-x, ties.method = "min")))
-  #ties <- t(apply(ranks, 1, duplicated))
-  #selected <- select_genes(abs_stats, ranks, ties, class_data)
   centroids <- create_centroids(selected, class_means, overall_means)
 
   pooled_sds <- pooled_sds[match(rownames(centroids), names(pooled_sds))]
@@ -73,10 +75,11 @@ calculate_class_stats <- function(classes,
     as.data.frame(mks)$Freq
 }
 
-select_genes <- function(abs_stats, ranks, ties, class_data) {
+select_genes <- function(abs_stats, ranks, ties, class_data, sign_stats) {
   df <- data.frame(
     gene = colnames(abs_stats),
     abs = matrix(t(abs_stats), ncol = 1),
+    sign = matrix(t(sign_stats), ncol = 1),
     rank = matrix(t(ranks), ncol = 1),
     tie = matrix(t(ties), ncol = 1),
     class = rep(class_data$class, each = ncol(abs_stats)),
